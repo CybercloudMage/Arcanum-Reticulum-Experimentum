@@ -48,7 +48,7 @@ jobs:
       - name: Plan Terraform deployment
         run: |
           terraform fmt -check
-          terraform validate -input=false
+          terraform validate
           terraform plan -input=false -out=tfplan
 
       - name: Apply Terraform deployment
