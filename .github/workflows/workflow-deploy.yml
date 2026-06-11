@@ -17,6 +17,8 @@ jobs:
     environment: ${{ inputs.environment }}
     env:
       TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
+      TF_VAR_RESOURCE_GROUP_NAME: "rg-cybercloudmage-infra-${{ inputs.environment }}"
+      TF_VAR_RESOURCE_GROUP_LOCATION: "westcentralus"
     steps:
       - name: Set up Terraform on the runner
         uses: hashicorp/setup-terraform@v4
