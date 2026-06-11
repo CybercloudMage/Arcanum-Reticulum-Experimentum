@@ -1,2 +1,2 @@
-# Arcanum-Reticulum-Experimentum
-An experimental lab environment infrastructure built on Azure cloud platform utilizing Terraform as a template for services.
+# _Arcanum-Reticulum-Experimentum_ - Azure Lab Network Infrastructure
+This repo contains a newtwork infrastructure that builds out various necessary Azure resources for further Azure development.
