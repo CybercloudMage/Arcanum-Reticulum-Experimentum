@@ -1,9 +1,7 @@
 name: Perform deployment to development environment
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   deploy-dev:
