@@ -16,4 +16,6 @@ terraform {
 }
 
 # Configure the Azure Resource Manager (azurerm) provider
-provider "azurerm" {}
+provider "azurerm" {
+  features {}
+}
