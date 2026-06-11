@@ -427,3 +427,32 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.tfstate.lock.info
+
+# Terraform plans
+*.tfplan
+plan.out
+
+# Terraform variable files (often contain secrets)
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+*.tfvars
+*.tfvars.json
+
+# Terraform CLI config files (can contain credentials)
+.terraformrc
+terraform.rc
+

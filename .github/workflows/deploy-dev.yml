@@ -1,0 +1,15 @@
+name: Perform deployment to development environment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-dev:
+    uses: ./.github/workflows/workflow-deploy.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: 'dev'

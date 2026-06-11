@@ -1,0 +1,17 @@
+{
+	"[github-actions-workflow]": {
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+		"editor.detectIndentation": false
+	},
+	"[yaml]": {
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+		"editor.detectIndentation": false
+	},
+	"[terraform]": {
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+		"editor.detectIndentation": false
+	}
+}
