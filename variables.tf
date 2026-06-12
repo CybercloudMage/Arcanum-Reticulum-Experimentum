@@ -2,6 +2,7 @@
 variable "ENVIRONMENT" {
   description = "The environment to deploy to (e.g. dev, test, prod)"
   type        = string
+  default     = "dev"
   validation {
     condition     = contains(["dev", "test", "prod"], var.ENVIRONMENT)
     error_message = "ENVIRONMENT must be one of: dev, test, prod."
@@ -12,12 +13,14 @@ variable "ENVIRONMENT" {
 variable "RESOURCE_GROUP_NAME" {
   description = "The name of the resource group to create. If not provided, a default name will be generated."
   type        = string
+  default     = "rg-arcanum-reticulum-lab"
 }
 
 # Variable for the location of the resource group
 variable "RESOURCE_GROUP_LOCATION" {
   description = "The location of the resource group to create."
   type        = string
+  default     = "eastus2"
   validation {
     condition     = can(regex("^us", lower(var.RESOURCE_GROUP_LOCATION))) || can(regex("us[0-9]*$", lower(var.RESOURCE_GROUP_LOCATION)))
     error_message = "location must be a valid US Azure region."

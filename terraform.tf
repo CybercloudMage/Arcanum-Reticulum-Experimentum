@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.15.6"
+  required_version = ">= 1.10.0, < 2.0.0"
 
   # Configure the Azure Resource Manager (azurerm) provider
   backend "azurerm" {
@@ -12,6 +12,14 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.77"
     }
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.4"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7"
+    }
   }
 }
 
@@ -19,3 +27,5 @@ terraform {
 provider "azurerm" {
   features {}
 }
+
+provider "azapi" {}

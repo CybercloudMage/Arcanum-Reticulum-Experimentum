@@ -432,6 +432,7 @@ FodyWeavers.xsd
 .terraform/
 *.tfstate
 *.tfstate.*
+*.lock.hcl
 crash.log
 crash.*.log
 override.tf
