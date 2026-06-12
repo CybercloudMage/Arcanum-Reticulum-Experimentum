@@ -242,6 +242,36 @@ module "key_vault" {
   # Purge protection is not needed for this lab environment and only adds complexity when tearing down the environment, so it is disabled here. It should not be disabled in other circumstances.
   purge_protection_enabled = false
 
+  legacy_access_policies_enabled = true
+  legacy_access_policies = {
+    admin = {
+      object_id = var.ADMIN_USER_ID
+      secret_permissions = [
+        "Backup",
+        "Delete",
+        "Get",
+        "List",
+        "Purge",
+        "Recover",
+        "Restore",
+        "Set",
+      ]
+    }
+    terraform = {
+      object_id = data.azurerm_client_config.current.object_id
+      secret_permissions = [
+        "Backup",
+        "Delete",
+        "Get",
+        "List",
+        "Purge",
+        "Recover",
+        "Restore",
+        "Set",
+      ]
+    }
+  }
+
   public_network_access_enabled = true
   network_acls = {
     bypass         = "None"
@@ -261,23 +291,6 @@ module "key_vault" {
 
   enable_telemetry = false
   tags             = local.tags
-}
-
-resource "azurerm_role_assignment" "admin_keyvault_data_plane" {
-  scope                = local.key_vault_id
-  role_definition_name = "Key Vault Administrator"
-  principal_id         = var.ADMIN_USER_ID
-  principal_type       = "User"
-
-  depends_on = [module.key_vault]
-}
-
-resource "azurerm_role_assignment" "terraform_keyvault_secrets_officer" {
-  scope                = local.key_vault_id
-  role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_client_config.current.object_id
-
-  depends_on = [module.key_vault]
 }
 
 resource "random_password" "windows_admin" {
@@ -302,7 +315,7 @@ resource "azurerm_key_vault_secret" "windows_jumpbox_admin_password" {
   key_vault_id = local.key_vault_id
   content_type = "password"
 
-  depends_on = [azurerm_role_assignment.terraform_keyvault_secrets_officer]
+  depends_on = [module.key_vault]
 }
 
 resource "azurerm_key_vault_secret" "linux_jumpbox_admin_password" {
@@ -311,7 +324,7 @@ resource "azurerm_key_vault_secret" "linux_jumpbox_admin_password" {
   key_vault_id = local.key_vault_id
   content_type = "password"
 
-  depends_on = [azurerm_role_assignment.terraform_keyvault_secrets_officer]
+  depends_on = [module.key_vault]
 }
 
 resource "azurerm_key_vault_secret" "linux_jumpbox_admin_ssh_public_key" {
@@ -320,7 +333,7 @@ resource "azurerm_key_vault_secret" "linux_jumpbox_admin_ssh_public_key" {
   key_vault_id = local.key_vault_id
   content_type = "ssh-public-key"
 
-  depends_on = [azurerm_role_assignment.terraform_keyvault_secrets_officer]
+  depends_on = [module.key_vault]
 }
 
 resource "azurerm_key_vault_secret" "linux_jumpbox_admin_ssh_private_key" {
@@ -329,7 +342,7 @@ resource "azurerm_key_vault_secret" "linux_jumpbox_admin_ssh_private_key" {
   key_vault_id = local.key_vault_id
   content_type = "ssh-private-key"
 
-  depends_on = [azurerm_role_assignment.terraform_keyvault_secrets_officer]
+  depends_on = [module.key_vault]
 }
 
 module "windows_jumpbox" {
@@ -426,4 +439,3 @@ module "linux_jumpbox" {
   enable_telemetry = false
   tags             = local.tags
 }
-
