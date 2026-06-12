@@ -1,0 +1,71 @@
+name: Purge the lab infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'The environment to purge'
+        required: true
+        type: string
+        default: 'dev'
+
+jobs:
+  purge-lab:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment: ${{ github.event.inputs.environment }}
+    env:  
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Resolve environment values
+        id: cfg
+        shell: bash
+        run: |
+          ENV_NAME="${{ github.event.inputs.environment }}"
+          echo "env_name=${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "resource_group=rg-cybercloudmage-infra-${{ github.event.inputs.environment }}" >> "$GITHUB_OUTPUT"
+          echo "state_key=${ENV_NAME}.terraform.tfstate" >> "$GITHUB_OUTPUT"
+
+      - name: Delete resource group
+        shell: bash
+        run: |
+          RG="${{ steps.cfg.outputs.resource_group }}"
+          if az group exists --name "$RG"; then
+            az group delete --name "$RG" --yes --no-wait
+            echo "Deletion requested for resource group: $RG"
+          else
+            echo "Resource group not found: $RG"
+          fi
+
+      - name: Wait for resource group deletion
+        shell: bash
+        run: |
+          RG="${{ steps.cfg.outputs.resource_group }}"
+          if az group exists --name "$RG"; then
+            az group wait --name "$RG" --deleted
+          fi
+
+      - name: Delete Terraform state blob
+        shell: bash
+        run: |
+          az storage blob delete \
+            --auth-mode login \
+            --account-name "${{ vars.TFSTATE_STORAGE_ACCOUNT }}" \
+            --container-name "${{ vars.TFSTATE_CONTAINER }}" \
+            --name "${{ steps.cfg.outputs.state_key }}"
+      
