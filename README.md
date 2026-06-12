@@ -41,6 +41,7 @@ Defaults are baked into Terraform variables so deployments can run without addit
 - `ENVIRONMENT = "dev"`
 - `RESOURCE_GROUP_NAME = "rg-arcanum-reticulum-lab"`
 - `RESOURCE_GROUP_LOCATION = "eastus2"`
+- `ENABLE_ADMIN_ROLE_ASSIGNMENTS = false` (set to `true` only when the deploying identity can manage `Microsoft.Authorization/roleAssignments/*`)
 
 ## Usage
 

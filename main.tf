@@ -5,6 +5,8 @@ resource "azurerm_resource_group" "root_rg" {
 }
 
 resource "azurerm_role_assignment" "admin_owner_root_rg" {
+  count = var.ENABLE_ADMIN_ROLE_ASSIGNMENTS ? 1 : 0
+
   scope                = azurerm_resource_group.root_rg.id
   role_definition_name = "Owner"
   principal_id         = var.ADMIN_USER_ID
@@ -263,6 +265,8 @@ module "key_vault" {
 }
 
 resource "azurerm_role_assignment" "admin_keyvault_data_plane" {
+  count = var.ENABLE_ADMIN_ROLE_ASSIGNMENTS ? 1 : 0
+
   scope                = "${azurerm_resource_group.root_rg.id}/providers/Microsoft.KeyVault/vaults/${local.key_vault_name}"
   role_definition_name = "Key Vault Administrator"
   principal_id         = var.ADMIN_USER_ID
@@ -377,4 +381,3 @@ module "linux_jumpbox" {
   enable_telemetry = false
   tags             = local.tags
 }
-

@@ -32,6 +32,12 @@ variable "ADMIN_USER_ID" {
   type        = string
 }
 
+variable "ENABLE_ADMIN_ROLE_ASSIGNMENTS" {
+  description = "Controls whether Terraform should create Owner and Key Vault Administrator role assignments for ADMIN_USER_ID."
+  type        = bool
+  default     = false
+}
+
 variable "ADMIN_USER_IPV4_ADDRESS" {
   description = "The IPv4 address of the user to be added to the Key Vault firewall rules. This should be the public IP address of the user running Terraform."
   type        = string
