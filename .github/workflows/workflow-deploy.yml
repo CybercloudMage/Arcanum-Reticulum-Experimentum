@@ -44,6 +44,36 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           allow-no-subscriptions: false
           enable-AzPSSession: true
+
+      - name: Purge matching soft-deleted Key Vault
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VAULT_ENV="$(echo "${TF_VAR_ENVIRONMENT}" | tr '[:upper:]' '[:lower:]' | tr -d '-')"
+          RESOURCE_GROUP_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${TF_VAR_RESOURCE_GROUP_NAME}"
+          VAULT_SUFFIX="$(printf '%s' "${RESOURCE_GROUP_ID}" | md5sum | cut -c1-6)"
+          VAULT_NAME="kvarcanum${VAULT_ENV}${VAULT_SUFFIX}"
+
+          DELETED_VAULT_LOCATION="$(az keyvault list-deleted --query "[?name=='${VAULT_NAME}'] | [0].properties.location" -o tsv)"
+          if [[ -z "${DELETED_VAULT_LOCATION}" || "${DELETED_VAULT_LOCATION}" == "null" ]]; then
+            echo "No soft-deleted Key Vault found for ${VAULT_NAME}"
+            exit 0
+          fi
+
+          echo "Purging soft-deleted Key Vault ${VAULT_NAME} in ${DELETED_VAULT_LOCATION}"
+          az keyvault purge --name "${VAULT_NAME}" --location "${DELETED_VAULT_LOCATION}"
+
+          for _ in {1..30}; do
+            if [[ -z "$(az keyvault list-deleted --query "[?name=='${VAULT_NAME}'] | [0].name" -o tsv)" ]]; then
+              echo "Key Vault ${VAULT_NAME} is fully purged"
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "Timed out waiting for Key Vault ${VAULT_NAME} purge to complete" >&2
+          exit 1
           
       - name: Initialize Terraform for deployment
         run: |
