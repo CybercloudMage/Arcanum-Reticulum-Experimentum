@@ -32,6 +32,7 @@ This repository deploys a full Azure lab environment through Terraform and is in
 - Workload subnet default routes are sent to Azure Firewall.
 - General access subnet NSG only permits management inbound from `AzureBastionSubnet` on TCP `3389` and `22`.
 - Key Vault private DNS zone (`privatelink.vaultcore.azure.net`) is created and linked to the lab VNet.
+- Key Vault uses legacy access policies so the workflow identity can write bootstrap VM secrets without extra `roleAssignments/write` permissions.
 - Secure DNS forwarders (`9.9.9.9`, `1.1.1.1`) are configured on the VNet.
 
 ## Default configuration
