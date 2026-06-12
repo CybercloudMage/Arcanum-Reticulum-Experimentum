@@ -16,7 +16,7 @@ resource "azurerm_role_assignment" "admin_owner_root_rg" {
 data "azurerm_client_config" "current" {}
 
 locals {
-  name_suffix = lower(var.ENVIRONMENT)
+  name_suffix    = lower(var.ENVIRONMENT)
   key_vault_name = "kvarcanum${replace(lower(var.ENVIRONMENT), "-", "")}${substr(md5("${azurerm_resource_group.root_rg.id}-kv2"), 0, 6)}"
 
   tags = {
