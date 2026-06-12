@@ -57,9 +57,9 @@ module "lab_vnet" {
       ]
     }
     privateendpoints = {
-      name                            = "snet-private-endpoints"
-      address_prefixes                = ["10.200.2.0/24"]
-      default_outbound_access_enabled = false
+      name                              = "snet-private-endpoints"
+      address_prefixes                  = ["10.200.2.0/24"]
+      default_outbound_access_enabled   = false
       private_endpoint_network_policies = "Disabled"
     }
     generalaccess = {
@@ -80,9 +80,9 @@ module "firewall_public_ip" {
   location            = azurerm_resource_group.root_rg.location
   resource_group_name = azurerm_resource_group.root_rg.name
 
-  sku              = "Standard"
+  sku               = "Standard"
   allocation_method = "Static"
-  ip_version       = "IPv4"
+  ip_version        = "IPv4"
 
   enable_telemetry = false
   tags             = local.tags
@@ -188,16 +188,16 @@ module "bastion" {
   sku = "Standard"
 
   ip_configuration = {
-    name                  = "bastion-ipcfg"
-    subnet_id             = module.lab_vnet.subnets["azurebastion"].resource_id
-    create_public_ip      = true
+    name                   = "bastion-ipcfg"
+    subnet_id              = module.lab_vnet.subnets["azurebastion"].resource_id
+    create_public_ip       = true
     public_ip_address_name = "pip-bastion-arcanum-${local.name_suffix}"
   }
 
-  copy_paste_enabled    = true
-  file_copy_enabled     = true
-  ip_connect_enabled    = true
-  tunneling_enabled     = true
+  copy_paste_enabled     = true
+  file_copy_enabled      = true
+  ip_connect_enabled     = true
+  tunneling_enabled      = true
   shareable_link_enabled = false
 
   enable_telemetry = false
@@ -237,7 +237,7 @@ module "key_vault" {
 
   private_endpoints = {
     kv = {
-      subnet_resource_id           = module.lab_vnet.subnets["privateendpoints"].resource_id
+      subnet_resource_id            = module.lab_vnet.subnets["privateendpoints"].resource_id
       private_dns_zone_resource_ids = [azurerm_private_dns_zone.keyvault.id]
     }
   }
@@ -283,8 +283,8 @@ module "windows_jumpbox" {
 
   account_credentials = {
     admin_credentials = {
-      username                            = "labadmin"
-      password                            = random_password.windows_admin.result
+      username                           = "labadmin"
+      password                           = random_password.windows_admin.result
       generate_admin_password_or_ssh_key = false
     }
   }
@@ -330,8 +330,8 @@ module "linux_jumpbox" {
 
   account_credentials = {
     admin_credentials = {
-      username                            = "labadmin"
-      password                            = random_password.linux_admin.result
+      username                           = "labadmin"
+      password                           = random_password.linux_admin.result
       generate_admin_password_or_ssh_key = false
     }
     password_authentication_disabled = false
