@@ -18,6 +18,7 @@ data "azurerm_client_config" "current" {}
 locals {
   name_suffix    = lower(var.ENVIRONMENT)
   key_vault_name = "kvarcanum${replace(lower(var.ENVIRONMENT), "-", "")}${substr(md5("${azurerm_resource_group.root_rg.id}-kv2"), 0, 6)}"
+  key_vault_id   = "${azurerm_resource_group.root_rg.id}/providers/Microsoft.KeyVault/vaults/${local.key_vault_name}"
 
   tags = {
     environment = var.ENVIRONMENT
@@ -263,10 +264,18 @@ module "key_vault" {
 }
 
 resource "azurerm_role_assignment" "admin_keyvault_data_plane" {
-  scope                = "${azurerm_resource_group.root_rg.id}/providers/Microsoft.KeyVault/vaults/${local.key_vault_name}"
+  scope                = local.key_vault_id
   role_definition_name = "Key Vault Administrator"
   principal_id         = var.ADMIN_USER_ID
   principal_type       = "User"
+
+  depends_on = [module.key_vault]
+}
+
+resource "azurerm_role_assignment" "terraform_keyvault_secrets_officer" {
+  scope                = local.key_vault_id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 
   depends_on = [module.key_vault]
 }
@@ -281,6 +290,46 @@ resource "random_password" "linux_admin" {
   length           = 24
   special          = true
   override_special = "!@#$%*()-_=+[]{}?"
+}
+
+resource "tls_private_key" "linux_jumpbox_admin_ssh" {
+  algorithm = "ED25519"
+}
+
+resource "azurerm_key_vault_secret" "windows_jumpbox_admin_password" {
+  name         = "vm-win-jump-${local.name_suffix}-admin-password"
+  value        = random_password.windows_admin.result
+  key_vault_id = local.key_vault_id
+  content_type = "password"
+
+  depends_on = [azurerm_role_assignment.terraform_keyvault_secrets_officer]
+}
+
+resource "azurerm_key_vault_secret" "linux_jumpbox_admin_password" {
+  name         = "vm-linux-jump-${local.name_suffix}-admin-password"
+  value        = random_password.linux_admin.result
+  key_vault_id = local.key_vault_id
+  content_type = "password"
+
+  depends_on = [azurerm_role_assignment.terraform_keyvault_secrets_officer]
+}
+
+resource "azurerm_key_vault_secret" "linux_jumpbox_admin_ssh_public_key" {
+  name         = "vm-linux-jump-${local.name_suffix}-ssh-public-key"
+  value        = tls_private_key.linux_jumpbox_admin_ssh.public_key_openssh
+  key_vault_id = local.key_vault_id
+  content_type = "ssh-public-key"
+
+  depends_on = [azurerm_role_assignment.terraform_keyvault_secrets_officer]
+}
+
+resource "azurerm_key_vault_secret" "linux_jumpbox_admin_ssh_private_key" {
+  name         = "vm-linux-jump-${local.name_suffix}-ssh-private-key"
+  value        = tls_private_key.linux_jumpbox_admin_ssh.private_key_openssh
+  key_vault_id = local.key_vault_id
+  content_type = "ssh-private-key"
+
+  depends_on = [azurerm_role_assignment.terraform_keyvault_secrets_officer]
 }
 
 module "windows_jumpbox" {
@@ -309,7 +358,7 @@ module "windows_jumpbox" {
   account_credentials = {
     admin_credentials = {
       username                           = "labadmin"
-      password                           = random_password.windows_admin.result
+      password                           = azurerm_key_vault_secret.windows_jumpbox_admin_password.value
       generate_admin_password_or_ssh_key = false
     }
   }
@@ -356,10 +405,10 @@ module "linux_jumpbox" {
   account_credentials = {
     admin_credentials = {
       username                           = "labadmin"
-      password                           = random_password.linux_admin.result
+      ssh_keys                           = [azurerm_key_vault_secret.linux_jumpbox_admin_ssh_public_key.value]
       generate_admin_password_or_ssh_key = false
     }
-    password_authentication_disabled = false
+    password_authentication_disabled = true
   }
 
   network_interfaces = {
