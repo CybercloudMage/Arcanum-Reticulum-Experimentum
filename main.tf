@@ -281,6 +281,8 @@ module "windows_jumpbox" {
     storage_account_type = "StandardSSD_LRS"
   }
 
+  encryption_at_host_enabled = false
+
   account_credentials = {
     admin_credentials = {
       username                           = "labadmin"
@@ -328,6 +330,8 @@ module "linux_jumpbox" {
     storage_account_type = "StandardSSD_LRS"
   }
 
+  encryption_at_host_enabled = false
+
   account_credentials = {
     admin_credentials = {
       username                           = "labadmin"
@@ -352,4 +356,3 @@ module "linux_jumpbox" {
   enable_telemetry = false
   tags             = local.tags
 }
-
