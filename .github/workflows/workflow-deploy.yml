@@ -16,6 +16,10 @@ jobs:
       id-token: write
     environment: ${{ inputs.environment }}
     env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
       TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
       TF_VAR_RESOURCE_GROUP_NAME: "rg-cybercloudmage-infra-${{ inputs.environment }}"
       TF_VAR_RESOURCE_GROUP_LOCATION: "westcentralus"
