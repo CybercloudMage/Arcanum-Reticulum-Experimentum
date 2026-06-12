@@ -2,6 +2,12 @@ name: Perform deployment to development environment
 
 on:
   workflow_dispatch:
+    inputs:
+      region:
+        description: 'The region to deploy to'
+        required: true
+        type: string
+        default: 'westus3'
 
 jobs:
   deploy-dev:
@@ -12,3 +18,4 @@ jobs:
     secrets: inherit
     with:
       environment: 'dev'
+      region: ${{ github.event.inputs.region }}

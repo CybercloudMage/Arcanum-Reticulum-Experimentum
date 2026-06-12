@@ -7,6 +7,10 @@ on:
         description: 'The environment to deploy to'
         required: true
         type: string
+      region:
+        description: 'The region to deploy to'
+        required: true
+        type: string
 
 jobs:
   deploy:
@@ -22,7 +26,7 @@ jobs:
       ARM_USE_OIDC: true
       TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
       TF_VAR_RESOURCE_GROUP_NAME: "rg-cybercloudmage-infra-${{ inputs.environment }}"
-      TF_VAR_RESOURCE_GROUP_LOCATION: "westcentralus"
+      TF_VAR_RESOURCE_GROUP_LOCATION: ${{ inputs.region }}
     steps:
       - name: Set up Terraform on the runner
         uses: hashicorp/setup-terraform@v4
