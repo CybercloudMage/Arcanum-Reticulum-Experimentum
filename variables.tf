@@ -36,7 +36,7 @@ variable "ADMIN_USER_IPV4_ADDRESS" {
   description = "The IPv4 address of the user to be added to the Key Vault firewall rules. This should be the public IP address of the user running Terraform."
   type        = string
   validation {
-    condition     = can(regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", var.ADMIN_USER_IPV4_ADDRESS))
+    condition     = can(regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", var.ADMIN_USER_IPV4_ADDRESS))
     error_message = "ADMIN_USER_IPV4_ADDRESS must be a valid IPv4 address."
   }
 }
