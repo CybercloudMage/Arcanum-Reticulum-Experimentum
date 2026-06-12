@@ -224,10 +224,12 @@ resource "azurerm_private_dns_zone_virtual_network_link" "keyvault" {
 module "key_vault" {
   source = "Azure/avm-res-keyvault-vault/azurerm"
 
-  name                = "kvarcanum${replace(local.name_suffix, "-", "")}${substr(md5(azurerm_resource_group.root_rg.id), 0, 6)}"
+  name                = "kvarcanum${replace(local.name_suffix, "-", "")}${substr(md5("${azurerm_resource_group.root_rg.id}-kv2"), 0, 6)}"
   location            = azurerm_resource_group.root_rg.location
   resource_group_name = azurerm_resource_group.root_rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
+  # Purge protection is not needed for this lab environment and only adds complexity when tearing down the environment, so it is disabled here. It should not be disabled in other circumstances.
+  purge_protection_enabled = false
 
   public_network_access_enabled = false
   network_acls = {
