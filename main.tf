@@ -4,10 +4,20 @@ resource "azurerm_resource_group" "root_rg" {
   location = var.RESOURCE_GROUP_LOCATION
 }
 
+resource "azurerm_role_assignment" "admin_owner_root_rg" {
+  scope                = azurerm_resource_group.root_rg.id
+  role_definition_name = "Owner"
+  principal_id         = var.ADMIN_USER_ID
+  principal_type       = "User"
+
+  depends_on = [azurerm_resource_group.root_rg]
+}
+
 data "azurerm_client_config" "current" {}
 
 locals {
   name_suffix = lower(var.ENVIRONMENT)
+  key_vault_name = "kvarcanum${replace(lower(var.ENVIRONMENT), "-", "")}${substr(md5("${azurerm_resource_group.root_rg.id}-kv2"), 0, 6)}"
 
   tags = {
     environment = var.ENVIRONMENT
@@ -224,17 +234,21 @@ resource "azurerm_private_dns_zone_virtual_network_link" "keyvault" {
 module "key_vault" {
   source = "Azure/avm-res-keyvault-vault/azurerm"
 
-  name                = "kvarcanum${replace(local.name_suffix, "-", "")}${substr(md5("${azurerm_resource_group.root_rg.id}-kv2"), 0, 6)}"
+  name                = local.key_vault_name
   location            = azurerm_resource_group.root_rg.location
   resource_group_name = azurerm_resource_group.root_rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
   # Purge protection is not needed for this lab environment and only adds complexity when tearing down the environment, so it is disabled here. It should not be disabled in other circumstances.
   purge_protection_enabled = false
 
-  public_network_access_enabled = false
+  public_network_access_enabled = true
   network_acls = {
     bypass         = "None"
     default_action = "Deny"
+    ip_rules       = [var.ADMIN_USER_IPV4_ADDRESS]
+    virtual_network_subnet_ids = [
+      module.lab_vnet.subnets["serviceendpoints"].resource_id
+    ]
   }
 
   private_endpoints = {
@@ -246,6 +260,15 @@ module "key_vault" {
 
   enable_telemetry = false
   tags             = local.tags
+}
+
+resource "azurerm_role_assignment" "admin_keyvault_data_plane" {
+  scope                = "${azurerm_resource_group.root_rg.id}/providers/Microsoft.KeyVault/vaults/${local.key_vault_name}"
+  role_definition_name = "Key Vault Administrator"
+  principal_id         = var.ADMIN_USER_ID
+  principal_type       = "User"
+
+  depends_on = [module.key_vault]
 }
 
 resource "random_password" "windows_admin" {
