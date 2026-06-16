@@ -43,7 +43,7 @@ jobs:
     environment: ${{ inputs.environment }}
     env:
       TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
-      TF_VAR_AZURE_ROOT_REGION_NAME: ${{ secrets.AZURE_ROOT_REGION_NAME }}
+      TF_VAR_AZURE_ROOT_REGION_NAME: ${{ vars.AZURE_ROOT_REGION_NAME }}
     outputs:
       key_vault_id: ${{ steps.output_key_vault_id.outputs.key_vault_id }}
     permissions:

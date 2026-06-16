@@ -19,6 +19,33 @@ data "azurerm_subnet" "vm_admin" {
   resource_group_name  = data.azurerm_resource_group.root.name
 }
 
+data "azurerm_subnet" "bastion" {
+  name                 = var.AZURE_BASTION_SUBNET_NAME
+  virtual_network_name = data.azurerm_virtual_network.root.name
+  resource_group_name  = data.azurerm_resource_group.root.name
+}
+
+resource "azurerm_public_ip" "bastion" {
+  name                = "pip-bastion-${var.ENVIRONMENT}-001"
+  location            = data.azurerm_resource_group.root.location
+  resource_group_name = data.azurerm_resource_group.root.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+resource "azurerm_bastion_host" "main" {
+  name                = "bas-${var.ENVIRONMENT}-001"
+  location            = data.azurerm_resource_group.root.location
+  resource_group_name = data.azurerm_resource_group.root.name
+  sku                 = var.AZURE_BASTION_SKU
+
+  ip_configuration {
+    name                 = "configuration"
+    subnet_id            = data.azurerm_subnet.bastion.id
+    public_ip_address_id = azurerm_public_ip.bastion.id
+  }
+}
+
 resource "random_password" "windows_admin" {
   length           = 24
   special          = true

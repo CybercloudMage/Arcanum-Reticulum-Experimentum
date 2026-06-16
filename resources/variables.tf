@@ -28,6 +28,18 @@ variable "AZURE_VM_SUBNET_NAME" {
   default     = "snet-admin-general"
 }
 
+variable "AZURE_BASTION_SUBNET_NAME" {
+  description = "Subnet name in the root VNet used by Azure Bastion."
+  type        = string
+  default     = "AzureBastionSubnet"
+}
+
+variable "AZURE_BASTION_SKU" {
+  description = "Azure Bastion SKU. Supported values include Basic and Standard."
+  type        = string
+  default     = "Standard"
+}
+
 variable "WINDOWS_VM_ADMIN_USERNAME" {
   description = "Local admin username for the Windows VM."
   type        = string
