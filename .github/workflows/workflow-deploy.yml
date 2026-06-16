@@ -74,9 +74,9 @@ jobs:
           terraform init -input=false \
           -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
           -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
-          -backend-config="subscription_id=${{ secrets.TF_BACKEND_SUBSCRIPTION_ID }}" \
-          -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RESOURCE_GROUP_NAME }}" \
-          -backend-config="storage_account_name=${{ secrets.TF_BACKEND_STORAGE_ACCOUNT_NAME }}" \
+          -backend-config="subscription_id=${{ secrets.TF_BACKEND_AZURERM_SUBSCRIPTION_ID }}" \
+          -backend-config="resource_group_name=${{ secrets.TF_BACKEND_AZURERM_RESOURCE_GROUP_NAME }}" \
+          -backend-config="storage_account_name=${{ secrets.TF_BACKEND_AZURERM_STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ needs.validate-deployment-dependencies.outputs.repository_owner }}" \
           -backend-config="key=${{ github.event.repository.name }}-infra-${{ inputs.environment }}.tfstate"
 
