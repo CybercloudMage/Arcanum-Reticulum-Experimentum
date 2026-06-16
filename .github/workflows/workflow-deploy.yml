@@ -78,7 +78,7 @@ jobs:
           -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RESOURCE_GROUP_NAME }}" \
           -backend-config="storage_account_name=${{ secrets.TF_BACKEND_STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ needs.validate-deployment-dependencies.outputs.repository_owner }}" \
-          -backend-config="key=${{ github.event.repository.name }}-${{ inputs.environment }}.tfstate"
+          -backend-config="key=${{ github.event.repository.name }}-infra-${{ inputs.environment }}.tfstate"
 
       - name: Validate and debug Terraform of Infrastructure
         run: |
@@ -101,8 +101,8 @@ jobs:
       - validate-deployment-dependencies
       - deploy-infrastructure
     runs-on:
-      group: ${{ vars.RESOURCE_DEPLOYMENT_RUNNER_GROUP }}
-      labels: ${{ vars.RESOURCE_DEPLOYMENT_RUNNER_LABELS }}
+      group: ${{ vars.GHE_RESOURCE_DEPLOYMENT_RUNNER_GROUP }}
+      labels: ${{ vars.GHE_RESOURCE_DEPLOYMENT_RUNNER_LABELS }}
     environment: ${{ inputs.environment }}
     env:
       TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
@@ -141,7 +141,7 @@ jobs:
           -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RESOURCE_GROUP_NAME }}" \
           -backend-config="storage_account_name=${{ secrets.TF_BACKEND_STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ needs.validate-deployment-dependencies.outputs.repository_owner }}" \
-          -backend-config="key=${{ github.event.repository.name }}-${{ inputs.environment }}.tfstate"
+          -backend-config="key=${{ github.event.repository.name }}-resources-${{ inputs.environment }}.tfstate"
 
       - name: Validate and debug Terraform of Infrastructure
         run: |
