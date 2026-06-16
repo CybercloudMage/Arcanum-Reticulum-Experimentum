@@ -440,6 +440,7 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 .terraform.tfstate.lock.info
+.terraform.lock.hcl
 
 # Terraform plans
 *.tfplan
@@ -456,4 +457,3 @@ terraform.tfvars.json
 # Terraform CLI config files (can contain credentials)
 .terraformrc
 terraform.rc
-

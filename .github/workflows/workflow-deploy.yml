@@ -1,0 +1,150 @@
+name: Reusable Infrastructure Deployment Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'The deployment environment (e.g., staging, production)'
+        required: true
+        type: string
+
+jobs:
+  validate-deployment-dependencies:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      repository_owner_lower: ${{ steps.validate_repo_name.outputs.repository_owner_lower }}
+    permissions:
+      contents: read
+    steps:
+      - name: Validate environment input
+        shell: bash
+        run: |
+          case "${{ inputs.environment }}" in
+            dev|test|prod)
+              echo "Valid environment: ${{ inputs.environment }}"
+              ;;
+            *)
+              echo "Invalid environment: '${{ inputs.environment }}'. Allowed values are: dev, test, prod."
+              exit 1
+              ;;
+          esac
+
+      - name: Assure repository name is all lower case
+        id: validate_repo_name
+        shell: bash
+        run: |
+          repository_owner_lower=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "repository_owner=$repository_owner_lower" >> $GITHUB_OUTPUT
+
+  deploy-infrastructure:
+    needs: validate-deployment-dependencies
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
+      TF_VAR_AZURE_ROOT_REGION_NAME: ${{ secrets.AZURE_ROOT_REGION_NAME }}
+    outputs:
+      key_vault_id: ${{ steps.output_key_vault_id.outputs.key_vault_id }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.15.6
+
+      - name: Check out relevant repository components
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            infra
+          sparse-checkout-cone-mode: true
+      
+      - name: Login to Azure for Terraform backend
+        uses: azure/login@v3
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Initialize Terraform on Runner
+        run: |
+          terraform init -input=false \
+          -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
+          -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+          -backend-config="subscription_id=${{ secrets.TF_BACKEND_SUBSCRIPTION_ID }}" \
+          -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RESOURCE_GROUP_NAME }}" \
+          -backend-config="storage_account_name=${{ secrets.TF_BACKEND_STORAGE_ACCOUNT_NAME }}" \
+          -backend-config="container_name=${{ needs.validate-deployment-dependencies.outputs.repository_owner }}" \
+          -backend-config="key=${{ github.event.repository.name }}-${{ inputs.environment }}.tfstate"
+
+      - name: Validate and debug Terraform of Infrastructure
+        run: |
+          terraform fmt -recursive
+          terraform validate
+          terraform plan -input=false -out=tfplan
+
+      - name: Apply Terraform for Infrastructure
+        run: |
+          terraform apply -input=false tfplan
+
+      - name: Output Key Vault ID
+        id: output_key_vault_id
+        run: |
+          echo "key_vault_id=$(terraform output -raw key_vault_id)" >> $GITHUB_OUTPUT
+          echo "virtual_network_id=$(terraform output -raw virtual_network_id)" >> $GITHUB_OUTPUT
+
+  deploy-resources:
+    needs:
+      - validate-deployment-dependencies
+      - deploy-infrastructure
+    runs-on:
+      group: ${{ vars.RESOURCE_DEPLOYMENT_RUNNER_GROUP }}
+      labels: ${{ vars.RESOURCE_DEPLOYMENT_RUNNER_LABELS }}
+    environment: ${{ inputs.environment }}
+    env:
+      TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
+      TF_VAR_KEY_VAULT_ID: ${{ needs.deploy-infrastructure.outputs.key_vault_id }}
+      TF_VAR_AZURE_VIRTUAL_NETWORK_ID: ${{ needs.deploy-infrastructure.outputs.virtual_network_id }}
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.15.6
+
+      - name: Check out relevant repository components
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            resources
+          sparse-checkout-cone-mode: true
+      
+      - name: Login to Azure for Terraform backend
+        uses: azure/login@v3
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Initialize Terraform on Runner
+        run: |
+          terraform init -input=false \
+          -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
+          -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+          -backend-config="subscription_id=${{ secrets.TF_BACKEND_SUBSCRIPTION_ID }}" \
+          -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RESOURCE_GROUP_NAME }}" \
+          -backend-config="storage_account_name=${{ secrets.TF_BACKEND_STORAGE_ACCOUNT_NAME }}" \
+          -backend-config="container_name=${{ needs.validate-deployment-dependencies.outputs.repository_owner }}" \
+          -backend-config="key=${{ github.event.repository.name }}-${{ inputs.environment }}.tfstate"
+
+      - name: Validate and debug Terraform of Infrastructure
+        run: |
+          terraform fmt -recursive
+          terraform validate
+          terraform plan -input=false -out=tfplan
