@@ -1,0 +1,15 @@
+name: Deploy Lab to Dev Environment
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  deploy-to-dev:
+    uses: ./.github/workflows/workflow-deploy.yml
+    permissions:
+      contents: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: dev

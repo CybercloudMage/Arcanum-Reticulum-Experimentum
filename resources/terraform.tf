@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.15.0"
   backend "azurerm" {
     use_azuread_auth = true
-    use_oidc = true
+    use_oidc         = true
   }
   required_providers {
     azurerm = {
@@ -12,6 +12,14 @@ terraform {
     azapi = {
       source  = "azure/azapi"
       version = "~> 2.10.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7"
+    }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
     }
   }
 }
